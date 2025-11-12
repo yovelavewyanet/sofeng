@@ -1,0 +1,34 @@
+import express from "express";
+import Measurement from "../models/Measurement.js";
+import { calculateBodyType } from "../utils/bodyTypeCalculator.js";
+
+const router = express.Router();
+
+// POST /api/measurements - Submit measurements
+router.post("/", async (req, res) => {
+  try {
+    const { shoulders, bust, waist, hips } = req.body;
+    
+    // Calculate body type
+    const bodyTypeResult = calculateBodyType(shoulders, bust, waist, hips);
+    
+    // Save to database
+    const measurement = await Measurement.create({
+      shoulders,
+      bust,
+      waist,
+      hips,
+      bodyType: bodyTypeResult.type,
+      sessionId: req.body.sessionId || Date.now().toString()
+    });
+    
+    res.json({
+      measurement,
+      bodyTypeResult
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+export default router;
